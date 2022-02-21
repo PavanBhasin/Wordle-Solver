@@ -3,56 +3,64 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
 import re
 
-firstC = firstP = firstA = secondC = secondP = secondA = thirdC = thirdP = thirdA = fourthC = fourthP = fourthA = fifthC = fifthP = fifthA = "."
-absentLetters = set()
-presentLetters = set()
-
 def letterStatus(i):
-    global firstC, firstP, firstA, secondC, secondP, secondA, thirdC, thirdP, thirdA, fourthC, fourthP, fourthA, fifthC, fifthP, fifthA, absentLetters, presentLetters
+ 
+    absentLetters = ['.'] * 5
+    presentLetters = ['.'] * 5
+    correctLetters = ['.'] * 5
+
     for x in range(1,6):
         str = f'return document.querySelector("body > game-app").shadowRoot.querySelector("#board > game-row:nth-child({i})").shadowRoot.querySelector("div > game-tile:nth-child({x})")' 
         tile = driver.execute_script(str)
+
         if tile.get_attribute('evaluation') == 'correct':
-            if x == 1:
-                firstC = tile.get_attribute('letter')
-            elif x == 2:
-                secondC = tile.get_attribute('letter')
-            elif x == 3: 
-                thirdC = tile.get_attribute('letter')
-            elif x == 4:
-                fourthC = tile.get_attribute('letter')
-            elif x == 5:
-                fifthC = tile.get_attribute('letter')
-
+            correctLetters[x-1] = tile.get_attribute('letter')
         elif tile.get_attribute('evaluation') == 'present': 
-            presentLetters.add(tile.get_attribute('letter'))
-            if x == 1:
-                firstP = tile.get_attribute('letter')
-            elif x == 2:
-                secondP = tile.get_attribute('letter')
-            elif x == 3: 
-                thirdP = tile.get_attribute('letter')
-            elif x == 4:
-                fourthP = tile.get_attribute('letter')
-            elif x == 5:
-                fifthP = tile.get_attribute('letter')
+            presentLetters[x-1] = tile.get_attribute('letter')
         else:
-            absentLetters.add(tile.get_attribute('letter'))
-            if x == 1:
-                firstA = tile.get_attribute('letter')
-            elif x == 2:
-                secondA = tile.get_attribute('letter')
-            elif x == 3: 
-                thirdA = tile.get_attribute('letter')
-            elif x == 4:
-                fourthA = tile.get_attribute('letter')
-            elif x == 5:
-                fifthA = tile.get_attribute('letter')
+            absentLetters[x-1] = tile.get_attribute('letter')
 
-    guess = firstC + secondC + thirdC + fourthC + fifthC
-    switch = firstP + secondP + thirdP + fourthP + fifthP
+    guess = correctLetters[0] + correctLetters[1] + correctLetters[2] + correctLetters[3] + correctLetters[4]
+    
+    switch = presentLetters[0] + presentLetters[1] + presentLetters[2] + presentLetters[3] + presentLetters[4]
 
-    return guess, switch, absentLetters, presentLetters
+    modifyList(guess, absentLetters, presentLetters)
+
+def modifyList(guess, absentLetters, presentLetters):
+    global wordList
+    for word in wordList[:]:
+        if word[0] == absentLetters[0]:
+            wordList.remove(word)
+        elif word[1] == absentLetters[1]:
+            wordList.remove(word)
+        elif word[2] == absentLetters[2]:
+            wordList.remove(word)
+        elif word[3] == absentLetters[3]:
+            wordList.remove(word)
+        elif word[4] == absentLetters[4]:
+            wordList.remove(word)
+    print(wordList)
+
+    regex = re.compile(guess)
+    wordList = [word for word in wordList if re.match(regex, word)]
+    print(wordList)
+
+    wordList = [word for word in wordList if all(letter in word for letter in presentLetters if letter != '.')]
+    
+    print(wordList)
+
+    for word in wordList[:]:
+        if word[0] == presentLetters[0]:
+            wordList.remove(word)
+        elif word[1] == presentLetters[1]:
+            wordList.remove(word)
+        elif word[2] == presentLetters[2]:
+            wordList.remove(word)
+        elif word[3] == presentLetters[3]:
+            wordList.remove(word)
+        elif word[4] == presentLetters[4]:
+            wordList.remove(word)
+    print(wordList)
 
 #Opens browser after running code
 driver = webdriver.Chrome('/usr/bin/chromedriver')
@@ -68,76 +76,4 @@ correctWords = set()
 presentWords = set()
 absentWords = set()
 
-guess, switch, absentLetters, presentLetters = letterStatus(1)
-
-#wordList = [word for word in wordList if all(letter not in word for letter in absentLetters)]
-
-for word in wordList[:]:
-    if word[0] == firstA:
-        wordList.remove(word)
-    elif word[1] == secondA:
-        wordList.remove(word)
-    elif word[2] == thirdA:
-        wordList.remove(word)
-    elif word[3] == fourthA:
-        wordList.remove(word)
-    elif word[4] == fifthA:
-        wordList.remove(word)
-
-regex = re.compile(guess)
-wordList = [word for word in wordList if re.match(regex, word)]
-
-wordList = [word for word in wordList if all(letter in word for letter in presentLetters)]
-
-reg = re.compile(switch)
-
-for word in wordList[:]:
-    if word[0] == firstP:
-        wordList.remove(word)
-    elif word[1] == secondP:
-        wordList.remove(word)
-    elif word[2] == thirdP:
-        wordList.remove(word)
-    elif word[3] == fourthP:
-        wordList.remove(word)
-    elif word[4] == fifthP:
-        wordList.remove(word)
-
-thirdP = '.'
-actions.pause(4)
-actions.send_keys('treed\n')
-actions.perform()
-
-guess, switch, absentLetters, presentLetters = letterStatus(2)
-
-for word in wordList[:]:
-    if word[0] == firstA:
-        wordList.remove(word)
-    elif word[1] == secondA:
-        wordList.remove(word)
-    elif word[2] == thirdA:
-        wordList.remove(word)
-    elif word[3] == fourthA:
-        wordList.remove(word)
-    elif word[4] == fifthA:
-        wordList.remove(word)
-
-regex = re.compile(guess)
-wordList = [word for word in wordList if re.match(regex, word)]
-
-wordList = [word for word in wordList if all(letter in word for letter in presentLetters)]
-
-reg = re.compile(switch)
-
-for word in wordList[:]:
-    if word[0] == firstP:
-        wordList.remove(word)
-    elif word[1] == secondP:
-        wordList.remove(word)
-    elif word[2] == thirdP:
-        wordList.remove(word)
-    elif word[3] == fourthP:
-        wordList.remove(word)
-    elif word[4] == fifthP:
-        wordList.remove(word)
-print(wordList)
+letterStatus(1)
