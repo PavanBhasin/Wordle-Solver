@@ -4,9 +4,8 @@ from selenium.webdriver.common.action_chains import ActionChains
 from selenium import webdriver
 import re
 
-def letterStatus(i):
+def evaluateLetters(i):
     
-    print(wordList)
     wordGuess = random.choice(wordList)
 
     wordList.remove(wordGuess)
@@ -25,7 +24,6 @@ def letterStatus(i):
     for x in range(1,6):
         str = f'return document.querySelector("body > game-app").shadowRoot.querySelector("#board > game-row:nth-child({i})").shadowRoot.querySelector("div > game-tile:nth-child({x})")' 
         tile = driver.execute_script(str)
-
         if tile.get_attribute('evaluation') == 'correct':
             correctLetters[x-1] = tile.get_attribute('letter')
         elif tile.get_attribute('evaluation') == 'present': 
@@ -33,18 +31,21 @@ def letterStatus(i):
         else:
             absentLetters[x-1] = tile.get_attribute('letter')
 
-    guess = correctLetters[0] + correctLetters[1] + correctLetters[2] + correctLetters[3] + correctLetters[4]
+    #Combine all elements in correctLetters to be used by regex
+    guess = "".join(correctLetters)
     
+    #Check if Wordle was solved
+    if '.' not in guess:
+        return True
+
     modifyList(guess, absentLetters, presentLetters, correctLetters)
 
 def modifyList(guess, absentLetters, presentLetters, correctLetters):
     global wordList
     
     wordList = [word for word in wordList if all(letter not in word for letter in absentLetters if letter not in correctLetters if letter not in presentLetters)]
-  
     regex = re.compile(guess)
     wordList = [word for word in wordList if re.match(regex, word)]
-
     wordList = [word for word in wordList if all(letter in word for letter in presentLetters if letter != '.')]
 
     for word in wordList[:]:
@@ -64,4 +65,6 @@ driver = webdriver.Chrome('/usr/bin/chromedriver')
 driver.get('https://www.nytimes.com/games/wordle/index.html')
 
 for x in range(1,7):
-    letterStatus(x)
+    flag = evaluateLetters(x)
+    if flag == True:
+        break
